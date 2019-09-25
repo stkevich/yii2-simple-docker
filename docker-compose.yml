@@ -1,0 +1,62 @@
+version: "3"
+services:
+  nginx:
+    container_name: my_nginx
+    build: ./docker/nginx
+    ports:
+      - "8095:80"
+    depends_on:
+      - backend
+    volumes:
+      - $PWD/:/var/www/html
+
+  backend:
+    container_name: my_backend
+    build: ./docker/php
+    user: $UID
+    depends_on:
+      - database
+      - rabbit
+    volumes:
+      - $PWD/:/var/www/html
+
+  database:
+    container_name: my_database
+    image: mariadb:10.2
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_DATABASE=sop
+      - MYSQL_USER=dev
+      - MYSQL_PASSWORD=123456
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  composer:
+    container_name: my_composer
+    image: "composer"
+    user: $UID
+    volumes:
+      - $PWD/:/app
+    command: composer install --ignore-platform-reqs
+
+  rabbit:
+    container_name: my_rabbit
+    image: rabbitmq:3.6.15
+    hostname: "rabbit"
+    ports:
+      - "15673:15672"
+      - "5673:5672"
+    volumes:
+      - rabbit:/var/lib/rabbitmq
+      - ./docker/rabbit/conf/:/etc/rabbitmq/
+
+volumes:
+  dbdata:
+    driver_opts:
+      type: none
+      device: $PWD/docker/sql
+      o: bind
+  rabbit:
+    driver: local

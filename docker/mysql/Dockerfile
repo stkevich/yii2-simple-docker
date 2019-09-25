@@ -1,0 +1,4 @@
+FROM mysql:latest
+
+RUN set global sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+
